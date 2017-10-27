@@ -23,6 +23,25 @@
 #include <time.h>
 #include <functional>
 #include <libethash/ethash.h>
+#include <iostream>
+#include <fstream>
+
+struct KernelSetup
+{
+	unsigned int m_searchBufferArg;
+	unsigned int m_headerArg;
+	unsigned int m_dagArg;
+	unsigned int m_startNonceArg;
+	unsigned int m_targetArg;
+	unsigned int m_isolateArg;
+	int m_factor1Arg;
+	int m_factor2Arg;
+	int m_dagSize128Arg;
+
+	KernelSetup() : m_searchBufferArg(0), m_headerArg(1), m_dagArg(2),
+		m_startNonceArg(3), m_targetArg(4), m_isolateArg(5),
+		m_factor1Arg(-1), m_factor2Arg(-1), m_dagSize128Arg(-1) {}
+};
 
 class ethash_cl_miner
 {
@@ -77,17 +96,31 @@ private:
 	static std::vector<cl::Device> getDevices(std::vector<cl::Platform> const& _platforms, unsigned _platformId);
 	static std::vector<cl::Platform> getPlatforms();
 
+	bool loadBinaryKernel(std::string platform, cl::Device device, uint32_t dagSize128, uint32_t lightSize64, int platformId, int computeCapability, char *options);
+
 	cl::Context m_context;
 	cl::CommandQueue m_queue;
+	cl::Kernel m_asmSearchKernel;
 	cl::Kernel m_searchKernel;
 	cl::Kernel m_dagKernel;
 	cl::Buffer m_dag;
 	cl::Buffer m_light;
 	cl::Buffer m_header;
 	cl::Buffer m_searchBuffer[c_bufferCount];
+
 	unsigned m_globalWorkSize;
 	bool m_openclOnePointOne;
 
+
+	KernelSetup m_kernelArgs;
+
+	bool m_useAsmKernel = true;
+	bool m_cpuValidateNonce = true;
+	bool m_clReportMixHash = false;
+	unsigned m_maxSolutions = 32;
+
+	/// Not used...
+	unsigned s_threadsPerHash = 8;
 	/// The local work size for the search
 	static unsigned s_workgroupSize;
 	/// The initial global work size for the searches

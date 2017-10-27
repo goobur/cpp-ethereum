@@ -540,6 +540,14 @@ bool ethash_cl_miner::init(
 		uint32_t dagSize128 = (unsigned)(dagSize / ETHASH_MIX_BYTES);
 		uint32_t lightSize64 = (unsigned)(_lightSize / sizeof(node));
 
+
+		if (m_useAsmKernel && !loadBinaryKernel(platformName, device, dagSize128, lightSize64, platformId, computeCapability, options)) {
+			ETHCL_LOG("Couldn't load kernel binaries, falling back to OpenCL kernel.");
+			m_useAsmKernel = false;
+		}
+
+
+
 		// patch source code
 		// note: ETHASH_CL_MINER_KERNEL is simply ethash_cl_miner_kernel.cl compiled
 		// into a byte array by bin2h.cmake. There is no need to load the file by hand in runtime
